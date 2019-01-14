@@ -22,6 +22,26 @@ function createReport(config){
     parseBites(config);
 }
 
+function niceNumber(num) {
+  min = 1e3;
+  // Alter numbers larger than 1k
+  if (num >= min) {
+    var units = ["k", "M", "B", "T"];
+    
+    var order = Math.floor(Math.log(num) / Math.log(1000));
+
+    var unitname = units[(order - 1)];
+    var num = Math.floor(num / 1000 ** order);
+    
+    // output number remainder + unitname
+    return num + unitname
+  }
+  
+  // return formatted original number
+  return num.toLocaleString()
+}
+
+
 function parseVariables(content,config){
     config.variables.forEach(function(variable){
         var func = variable.function.split('(')[0];
@@ -30,14 +50,14 @@ function parseVariables(content,config){
             url: url,
             success: function(result){
                 if(func=='single'){
-                    variable.value = result[1][0];
+                    variable.value = niceNumber(result[1][0]);
                     replaceVariable(variable);
                 }
                 if(func=='list'){
                     var num = variable.function.split('(')[1].slice(0, -1).split(',')[1];
                     var value = '';
                     for(i=0;i<num;i++){
-                        value += result[i+1][0] + ' (' + result[i+1][1] + '), '
+                        value += result[i+1][0] + ' (' + niceNumber(result[i+1][1]) + '), '
                     }
                     variable.value = value.slice(0,-2);
                     replaceVariable(variable);
@@ -78,10 +98,7 @@ function createBite(id,biteid,data){
         createCrossTable(id,bite);
     }
     if(bite.type=='map'){
-        if(chart.scale==undefined){
-            chart.scale = 'linear';
-        }
-        createMap(id,bite,chart.scale);
+        createMap(id,bite,'linear');
     }
 }
 
